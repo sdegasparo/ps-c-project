@@ -11,34 +11,34 @@
   typedef enum {false, true} boolean;
 
 // Function prototype
-boolean isOpen();
-
+void readDirectory(char pid[]);
+void printOutput(boolean isUse, char pid[], char nameOutput[], char vmrssOutput[]);
 
 int main(void){
+    // Pointer for directory entry
+    struct dirent *dirent;
 
-  // Pointer for directory entry
-  struct dirent *dirent;
+    DIR *dir = opendir("/proc");
 
-  DIR *dir = opendir("/proc");
+    if (dir == NULL){
+        #if DEBUG
+          printf("Could not open current directory");
+        #endif
 
-  if (dir == NULL){
-    printf("Could not open current directory");
-    // Need to return 1 when error?
-    return 1;
-  }
+        // Need to return 1 when error?
+        return 1;
+    }
 
-  while ((dirent = readdir(dir)) != NULL){
-    isOpen(dirent->d_name);
+    while ((dirent = readdir(dir)) != NULL){
+        readDirectory(dirent->d_name);
+    }
 
-  // Print all folder in "/proc"
-  //printf("%s\n", dirent->d_name);
-  }
-
-  // Just if successful return 0
-  return 0;
+    // Just if successful return 0
+    return 0;
 }
-
-// Function
+/*
+ * Function
+ */
 
 /*
 const char* getUserID(){
@@ -52,59 +52,99 @@ const char* getUserID(){
   return sUserID;
 }*/
 
-// Check if Process is running with UserID
-boolean isOpen(char pid[]){
+/*
+ *  Read directory and check if process is running with UserID,
+ *  then call printOutput
+ */
+void readDirectory(char pid[]){
+  /*
+   *  Local variable
+   */
   char path[50];
+  char buffer[100];
+
+  char *nameOutput;
+  char name[128];
+  char *vmrssOutput;
+//  char *vmrssOutputF;
+  char vmrss[128];
+  boolean isUse = false;
+
+  /*
+   *  Build the path for the current pid status file
+   *  and open the file for reading
+   */
   sprintf(path, "/proc/%s/status", pid);
 
-  // Open Files
   FILE *fptr;
   fptr = fopen(path, "r");
   if(fptr == NULL){
-    #if DEBUG
-      printf("PID: %s couldn't open \n", pid);
-    #endif
-
-    return false;
-  }else{
-    #if DEBUG
-      printf("PID: %s open successful \n", pid);
-    #endif
-
-    // Search for Uid
-  char buffer[100]; // Buffer should allocat automaticly
-
-  // get UserID
-  unsigned int userID = getuid();
-  char sUserID[10];
-  sprintf(sUserID, "%d", userID);
-  /*#if DEBUG
-    printf("UserID = %d \n", userID);
-  #endif*/
-
-    while(fgets(buffer, sizeof(buffer), fptr)){
-      //printf("sUserId is = %s \n", sUserID);
-      //printf("%s", buffer);
-      if(strstr(buffer, sUserID)){
+      #if DEBUG
+          printf("PID: %s couldn't open \n", pid);
+      #endif
+    }else{
         #if DEBUG
-          printf("The program is running \n");
+            printf("PID: %s open successful \n", pid);
         #endif
 
-        // get pid
-        //unsigned int pid = 1035;
+        /*
+         *  get UserID
+         */
+        unsigned int userID = getuid();
+        char sUserID[10];
+        sprintf(sUserID, "%d", userID);
+        #if DEBUG
+          printf("UserID = %d \n", userID);
+        #endif
 
-        // get rss
-        unsigned int rss = 8888;
+        /*
+         *  Read the File line to line and save the Name, VmRSS.
+         *  Transfer the variable to printOutput, to print the Output,
+         *  when the process is running with the UserID.
+         */
+        while(fgets(buffer, sizeof(buffer), fptr)){
+            if(strstr(buffer, "Name:")){
+              strcpy(name, buffer);
+              nameOutput = strtok(name, ":");
+              nameOutput = strtok(NULL, ":");
 
-        printf("%s\t%u\n", pid, rss);
+            } else if(strstr(buffer, sUserID)){
+                isUse = true;
+                #if DEBUG
+                  printf("The process is running \n");
+                #endif
 
-        break;
-      }else{
-      //  printf("The programm isn't running");
-      }
+                }else if(strstr(buffer, "VmRSS:")){
+                      //strcpy(vmrss, buffer);
+
+                      unsigned int len = strlen(buffer) - 3;
+                      strncpy(vmrss, buffer, len);
+
+                      vmrssOutput = strtok(vmrss, ":");
+                      vmrssOutput = strtok(NULL, ":");
+
+                      /*
+                     static char* kBSubstring;
+                      if(NULL != (kBSubstring = strstr (vmrssOutput, "kB"))){
+                        kBSubstring[-1] = 0;
+                        kBSubstring[0] = 0;
+                        kBSubstring[1] = 0;
+                      }*/
+
+                      printOutput(isUse, pid, nameOutput, vmrssOutput);
+                    }
+
+        }// close while reading
+
+      }// close open File successful
+
+}// close isOpen Function
+
+/*
+ *  Print the Output to the stdout
+ */
+void printOutput(boolean isUse, char pid[], char nameOutput[], char vmrssOutput[]){
+    if(isUse){
+        printf("%s %s %s", pid, nameOutput, vmrssOutput);
     }
-
-    return true;
-  }
-
 }
