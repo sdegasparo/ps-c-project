@@ -7,10 +7,14 @@
 
 #define DEBUG 0
 
-// Typedef
+/*
+ ************** Typedef ********************
+ */
   typedef enum {false, true} boolean;
 
-// Function prototype
+  /*
+   ******** Function prototype ************
+   */
 void readDirectory(char pid[]);
 void printOutput(boolean isUse, char pid[], char nameOutput[], char vmrssOutput[]);
 
@@ -34,24 +38,12 @@ int main(void){
     }
 
     closedir(dir);
-    // Just if successful return 0
+
     return 0;
 }
 /*
- * Function
+ ************** Function ********************
  */
-
-/*
-const char* getUserID(){
-  // get UserID
-  unsigned int userID = getuid();
-  char sUserID[10];
-  sprintf(sUserID, "%d", userID);
-  #if DEBUG
-    printf("UserID = %d \n", userID);
-  #endif
-  return sUserID;
-}*/
 
 /*
  *  Read directory and check if process is running with UserID,
@@ -59,16 +51,20 @@ const char* getUserID(){
  */
 void readDirectory(char pid[]){
   /*
-   *  Local variable
+   *  Variable
    */
   char path[50];
-  char buffer[100];
+  char buffer[128];
 
-  char *nameOutput;
   char name[128];
-  char *vmrssOutput;
-//  char *vmrssOutputF;
+  static char *nameOutput;
+  char *saveName = name;
+
   char vmrss[128];
+  static char *vmrssOutput;
+  char *saveVmrss = vmrss;
+
+
   boolean isUse = false;
 
   /*
@@ -94,6 +90,7 @@ void readDirectory(char pid[]){
         unsigned int userID = getuid();
         char sUserID[10];
         sprintf(sUserID, "%d", userID);
+
         #if DEBUG
           printf("UserID = %d \n", userID);
         #endif
@@ -106,32 +103,33 @@ void readDirectory(char pid[]){
         while(fgets(buffer, sizeof(buffer), fptr)){
             if(strstr(buffer, "Name:")){
 
-              //unsigned int len = strlen(buffer) - 1;
-
-              /*char buff[strlen(buffer)];
-              memcpy(buff, buffer, strlen(buffer));*/
               strcpy(name, buffer);
-              nameOutput = strtok(name, ":");
-              nameOutput = strtok(NULL, ":");
+              nameOutput = strtok_r(name, ":", &saveName);
+              nameOutput = strtok_r(NULL, ":", &saveName);
+              //nameOutput = strtok_r(NULL, ":");
 
-              for(int i = strcspn (nameOutput, "\n"); i < strlen(nameOutput); i++){
+              /*strcpy(name, buffer);
+              nameOutput = strtok(name, ":");
+              nameOutput = strtok(NULL, ":");*/
+
+              /*
+               *  Remove null terminator "\n"
+               */
+              for(unsigned int i = strcspn (nameOutput, "\n"); i < strlen(nameOutput); i++){
                 nameOutput[i] = 0;
               }
 
             } else if(strstr(buffer, "Uid:") && strstr(buffer, sUserID)){
                 isUse = true;
+
                 #if DEBUG
                   printf("The process is running \n Found Uid on this line: %s", buffer);
                 #endif
 
                 }else if(strstr(buffer, "VmRSS:")){
-                      //strcpy(vmrss, buffer);
-
-                      //unsigned int len = ;
-                      strncpy(vmrss, buffer, strlen(buffer) - 4);
-
-                      vmrssOutput = strtok(vmrss, ":");
-                      vmrssOutput = strtok(NULL, ":");
+                      strncpy(vmrss, buffer, strlen(buffer) - 3);
+                      vmrssOutput = strtok_r(vmrss, ":", &saveVmrss);
+                      vmrssOutput = strtok_r(NULL, ":", &saveVmrss);
 
                       /*
                      static char* kBSubstring;
