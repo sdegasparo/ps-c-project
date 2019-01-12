@@ -33,6 +33,7 @@ int main(void){
         readDirectory(dirent->d_name);
     }
 
+    closedir(dir);
     // Just if successful return 0
     return 0;
 }
@@ -104,21 +105,30 @@ void readDirectory(char pid[]){
          */
         while(fgets(buffer, sizeof(buffer), fptr)){
             if(strstr(buffer, "Name:")){
+
+              //unsigned int len = strlen(buffer) - 1;
+
+              /*char buff[strlen(buffer)];
+              memcpy(buff, buffer, strlen(buffer));*/
               strcpy(name, buffer);
               nameOutput = strtok(name, ":");
               nameOutput = strtok(NULL, ":");
 
-            } else if(strstr(buffer, sUserID)){
+              for(int i = strcspn (nameOutput, "\n"); i < strlen(nameOutput); i++){
+                nameOutput[i] = 0;
+              }
+
+            } else if(strstr(buffer, "Uid:") && strstr(buffer, sUserID)){
                 isUse = true;
                 #if DEBUG
-                  printf("The process is running \n");
+                  printf("The process is running \n Found Uid on this line: %s", buffer);
                 #endif
 
                 }else if(strstr(buffer, "VmRSS:")){
                       //strcpy(vmrss, buffer);
 
-                      unsigned int len = strlen(buffer) - 3;
-                      strncpy(vmrss, buffer, len);
+                      //unsigned int len = ;
+                      strncpy(vmrss, buffer, strlen(buffer) - 4);
 
                       vmrssOutput = strtok(vmrss, ":");
                       vmrssOutput = strtok(NULL, ":");
@@ -145,6 +155,6 @@ void readDirectory(char pid[]){
  */
 void printOutput(boolean isUse, char pid[], char nameOutput[], char vmrssOutput[]){
     if(isUse){
-        printf("%s %s %s", pid, nameOutput, vmrssOutput);
+        printf("%s %s\t%s \n", pid, nameOutput, vmrssOutput);
     }
 }
