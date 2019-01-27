@@ -108,7 +108,7 @@ void readDirectory(char pid[]){
               nameOutput = strtok_r(NULL, ":", &saveName);
 
               /*
-               *  Remove null terminator "\n"
+               *  Remove new line "\n"
                */
               for(unsigned int i = strcspn (nameOutput, "\n"); i < strlen(nameOutput); i++){
                 nameOutput[i] = 0;
