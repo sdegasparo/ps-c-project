@@ -106,11 +106,6 @@ void readDirectory(char pid[]){
               strcpy(name, buffer);
               nameOutput = strtok_r(name, ":", &saveName);
               nameOutput = strtok_r(NULL, ":", &saveName);
-              //nameOutput = strtok_r(NULL, ":");
-
-              /*strcpy(name, buffer);
-              nameOutput = strtok(name, ":");
-              nameOutput = strtok(NULL, ":");*/
 
               /*
                *  Remove null terminator "\n"
@@ -127,17 +122,16 @@ void readDirectory(char pid[]){
                 #endif
 
                 }else if(strstr(buffer, "VmRSS:")){
-                      strncpy(vmrss, buffer, strlen(buffer) - 3);
+                      strcpy(vmrss, buffer);
                       vmrssOutput = strtok_r(vmrss, ":", &saveVmrss);
                       vmrssOutput = strtok_r(NULL, ":", &saveVmrss);
 
-                      /*
-                     static char* kBSubstring;
-                      if(NULL != (kBSubstring = strstr (vmrssOutput, "kB"))){
-                        kBSubstring[-1] = 0;
-                        kBSubstring[0] = 0;
-                        kBSubstring[1] = 0;
-                      }*/
+                      static char* deletekB;
+                      if(NULL != (deletekB = strstr (vmrssOutput, "kB"))){
+                        deletekB[-1] = 0;
+                        deletekB[0] = 0;
+                        deletekB[1] = 0;
+                      }
 
                       printOutput(isUse, pid, nameOutput, vmrssOutput);
                     }
@@ -153,6 +147,6 @@ void readDirectory(char pid[]){
  */
 void printOutput(boolean isUse, char pid[], char nameOutput[], char vmrssOutput[]){
     if(isUse){
-        printf("%s %s\t%s \n", pid, nameOutput, vmrssOutput);
+        printf("%-10s %-20s %s \n", pid, nameOutput, vmrssOutput);
     }
 }
